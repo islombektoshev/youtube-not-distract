@@ -1,5 +1,7 @@
 const STYLE_ID = "hide-recommendations-style";
 const COMMENT_STYLE_ID = "hide-comments-style";
+const BLUR_STYLE_ID = "blure-video-style";
+
 const URL_PATTERNS = [
     /^https:\/\/www\.youtube\.com\/$/,             // Home page
     /^https:\/\/www\.youtube\.com\/watch/,         // Video page
@@ -73,6 +75,30 @@ function toggleComments(hide) {
     }
 }
 
+
+window.__blureVideo = false;
+function toggleBlur() {
+    window.__blureVideo = !window.__blureVideo;
+    let styleTag = document.getElementById(BLUR_STYLE_ID);
+
+    if (window.__blureVideo) {
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = BLUR_STYLE_ID;
+            styleTag.textContent = `
+                video.video-stream.html5-main-video{
+                    filter: blur(80px);
+                }
+            `;
+            document.head.appendChild(styleTag);
+        }
+    } else {
+        if (styleTag) {
+            styleTag.remove();
+        }
+    }
+}
+
 // Load and apply initial state
 chrome.storage.local.get(["hideRecommendations", "hideComments"], (data) => {
     tryToggleRecommendations(data.hideRecommendations ?? true);
@@ -87,13 +113,22 @@ chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "toggleComments") {
         toggleComments(request.state);
     }
+
+    if (request.action === "toggleBlur") {
+        toggleBlur();
+    }
+
 });
 
 // recommendations might hide subscription page, but I don't wan
 const observer = new MutationObserver(() => {
-    chrome.storage.local.get("hideRecommendations", (data) => {
-        tryToggleRecommendations(data.hideRecommendations ?? true);
-    });
+    try {
+        chrome.storage.local.get("hideRecommendations", (data) => {
+            tryToggleRecommendations(data.hideRecommendations ?? true);
+        });
+    } catch (e) {
+        console.warn("extention failed to act on mutatition");
+    }
 });
 
 observer.observe(document.body, { childList: true, subtree: true });

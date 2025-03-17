@@ -4,7 +4,8 @@
     "version": "1.0",
     "description": "Removes YouTube video recommendations to reduce distractions.",
     "permissions": [
-        "storage"
+        "storage",
+        "activeTab"
     ],
     "host_permissions": [
         "https://www.youtube.com/*"
@@ -25,8 +26,12 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://www.youtube.com/*"],
-            "js": ["content.js"],
+            "matches": [
+                "https://www.youtube.com/*"
+            ],
+            "js": [
+                "content.js"
+            ],
             "run_at": "document_idle"
         }
     ]
